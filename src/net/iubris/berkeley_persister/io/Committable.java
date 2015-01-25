@@ -1,4 +1,4 @@
-package net.iubris.persister.io;
+package net.iubris.berkeley_persister.io;
 
 public interface Committable {
 	public void beginTransaction();

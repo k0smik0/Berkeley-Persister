@@ -1,4 +1,7 @@
-package net.iubris.persister.core.helper;
+package net.iubris.berkeley_persister.core.helper;
+
+import net.iubris.berkeley_persister.core.helper.base.AbstractBerkeleyDBHelper;
+import net.iubris.berkeley_persister.core.helper.base.utils.BerkeleyDBHelperManager;
 
 import com.sleepycat.persist.model.EntityModel;
 

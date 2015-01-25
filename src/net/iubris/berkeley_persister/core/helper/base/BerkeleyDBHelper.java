@@ -1,4 +1,4 @@
-package net.iubris.persister.core.helper;
+package net.iubris.berkeley_persister.core.helper.base;
 
 import com.sleepycat.je.Environment;
 import com.sleepycat.persist.EntityCursor;

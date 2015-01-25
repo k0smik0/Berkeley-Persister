@@ -1,12 +1,14 @@
-package net.iubris.persister.core;
+package net.iubris.berkeley_persister.core;
 
 import java.util.Iterator;
 import java.util.Map;
 
-import net.iubris.persister.core.helper.BerkeleyDBHelper;
-import net.iubris.persister.dao.base.DAO;
-import net.iubris.persister.dao.base.exception.ExistantValueException;
-import net.iubris.persister.model.transport.base.TransportHolder;
+import net.iubris.berkeley_persister.core.helper.base.BerkeleyDBHelper;
+import net.iubris.berkeley_persister.dao.base.DAO;
+import net.iubris.berkeley_persister.dao.base.exception.ExistantValueException;
+import net.iubris.berkeley_persister.dao.base.exception.MismatchKeysException;
+import net.iubris.berkeley_persister.dao.base.exception.NotAlreadyExistantValueException;
+import net.iubris.berkeley_persister.model.TransportHolder;
 
 import com.sleepycat.je.Database;
 import com.sleepycat.je.Environment;
@@ -14,7 +16,7 @@ import com.sleepycat.je.Transaction;
 import com.sleepycat.persist.EntityCursor;
 import com.sleepycat.persist.PrimaryIndex;
 
-public abstract class AbstractPersisterByBerkeleyDB<K, V extends TransportHolder<K>> implements DAO<K, V, Boolean, Boolean, V> {
+public class PersisterTransportable<K, V extends TransportHolder<K>> implements DAO<K, V, V, Boolean, Boolean> {
 	
 	protected final BerkeleyDBHelper<K,V> berkeleyDBHelper;
 	protected final Class<K> keyClass;
@@ -23,7 +25,7 @@ public abstract class AbstractPersisterByBerkeleyDB<K, V extends TransportHolder
 	protected PrimaryIndex<K, V> primaryIndex;
 	protected Transaction transaction;
 
-	public AbstractPersisterByBerkeleyDB(BerkeleyDBHelper<K, V> berkeleyDBHelper, Class<K> keyClass, Class<V> valueClass ) {
+	public PersisterTransportable(BerkeleyDBHelper<K, V> berkeleyDBHelper, Class<K> keyClass, Class<V> valueClass ) {
 		this.berkeleyDBHelper = berkeleyDBHelper;
 		this.keyClass = keyClass;
 		this.valueClass = valueClass;
@@ -71,15 +73,17 @@ System.out.println("exception not throwed, nor "+transportKey+"added - something
 		return false;
 	};*/
 	
+	// old true if value is correctly stored, false everywhere (it means an old value is existant, but ExistantValueException was not throwed for any reason and something went wrong - however, new value is stored)
 	/**
-	 * @return true if value is correctly stored, false everywhere (it means an old value is existant, but ExistantValueException was not throwed for any reason and something went wrong - however, new value is stored)  
+	 * @return input value if stored was fine
 	 * @throws ExistantValueException if an old value with same key is found
 	 */
 	@Override
-	public Boolean create(V value) throws ExistantValueException {
+	public V create(V value) throws ExistantValueException {
+		/* OLD
 //		K transportKey = value.transportKey();
 //System.out.print("adding "+transportKey+": ");
-		checkIfExistant(value.transportKey());
+		checkIfExistant(value.getTransportKey());
 //System.out.print(" .. ");
 //		V putted;
 //		if (transaction!=null)
@@ -94,8 +98,13 @@ System.out.println("exception not throwed, nor "+transportKey+"added - something
 		}
 //System.out.println("exception not throwed, nor "+transportKey+"added - something went wrong");
 		//if here, something was wrong
-		return false;
-	};
+	 	return false;
+		 */
+		boolean putNoOverwrite = primaryIndex.putNoOverwrite(value);
+		if (putNoOverwrite)
+			return value;
+		throw new ExistantValueException();
+	}
 	
 	protected void checkIfExistant(K key) throws ExistantValueException {
 		if (primaryIndex.contains(key))
@@ -107,7 +116,49 @@ System.out.println("exception not throwed, nor "+transportKey+"added - something
 	}
 
 	@Override
-	public abstract V update(V value);
+	public Boolean update(K key, V value) throws MismatchKeysException, NotAlreadyExistantValueException {
+		if (contains(key).equals(Boolean.TRUE)) {
+			V existant = get(key);
+			if (existant.getTransportKey().equals(value.getTransportKey())) {
+//				primaryIndex.delete(existant.getTransportKey());
+				V old = primaryIndex.put(value);
+				if (old==null)
+					return false;
+				else {
+					if (old.getTransportKey().equals(existant.getTransportKey()))
+						return true;
+					throw new MismatchKeysException();
+				}
+			} else {
+				throw new MismatchKeysException();
+			}
+		} else {
+			throw new NotAlreadyExistantValueException();
+		}
+	}
+	
+	@Override
+	public Boolean update(V value) throws MismatchKeysException, NotAlreadyExistantValueException {
+		K transportKey = value.getTransportKey();
+		if (contains(transportKey).equals(Boolean.TRUE)) {
+			V existant = get(transportKey);
+			if (existant.getTransportKey().equals(value.getTransportKey())) {
+//				primaryIndex.delete(existant.getTransportKey());
+				V old = primaryIndex.put(value);
+				if (old==null)
+					return false;
+				else {
+					if (old.getTransportKey().equals(existant.getTransportKey()))
+						return true;
+					throw new MismatchKeysException();
+				}
+			} else {
+				throw new MismatchKeysException();
+			}
+		} else {
+			throw new NotAlreadyExistantValueException();
+		}
+	}
 	
 	@Override
 	public V get(K key) {

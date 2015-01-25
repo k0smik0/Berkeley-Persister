@@ -15,13 +15,14 @@
  *     You should have received a copy of the GNU General Public License
  *     along with .  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
-package net.iubris.persister.dao.base;
+package net.iubris.berkeley_persister.dao.base;
 
 import java.util.Iterator;
 import java.util.Map;
 
-import net.iubris.persister.dao.base.exception.ExistantValueException;
-import net.iubris.persister.io.Committable;
+import net.iubris.berkeley_persister.dao.base.exception.ExistantValueException;
+import net.iubris.berkeley_persister.dao.base.exception.UpdateException;
+import net.iubris.berkeley_persister.io.Committable;
 
 
 /**
@@ -38,7 +39,8 @@ public interface DAO<K, V, CR, RR, UR> extends Committable {
 
 	public CR create(V value) throws ExistantValueException;
 	public RR remove(K key);
-	public UR update(V value);
+	public UR update(K key, V value) throws UpdateException;
+	public UR update(V value) throws UpdateException;
 	public V get(K key);
 	
 	Boolean contains(K key);

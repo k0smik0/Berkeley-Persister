@@ -1,9 +1,9 @@
-package net.iubris.persister.model.transport.base;
+package net.iubris.berkeley_persister.model;
 
 public interface TransportHolder<K> {
 	
 //	public TransportHolder() {}
 	
-	K transportKey();
+	K getTransportKey();
 //	V transportValue();
 }

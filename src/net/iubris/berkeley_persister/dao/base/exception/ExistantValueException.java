@@ -1,4 +1,4 @@
-package net.iubris.persister.dao.base.exception;
+package net.iubris.berkeley_persister.dao.base.exception;
 
 public class ExistantValueException extends Exception {
 

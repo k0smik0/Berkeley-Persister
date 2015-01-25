@@ -1,9 +1,11 @@
-package net.iubris.persister.core.helper;
+package net.iubris.berkeley_persister.core.helper.base.utils;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.inject.Singleton;
+
+import net.iubris.berkeley_persister.core.helper.base.BerkeleyDBHelper;
 
 @Singleton
 public class BerkeleyDBHelperManager {
